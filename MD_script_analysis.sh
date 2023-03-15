@@ -2,46 +2,47 @@
 
 #STEP 1: make index file
 gmx make_ndx -f md.gro -o index.ndx -quiet << EOL
-1|12|13
+1|12|13|14
 q
 EOL
 
 #STEP 2: makes broken protein whole
 gmx trjconv -s md.tpr -f md.xtc -o md_noPBC_whole.xtc -pbc whole -quiet -n index.ndx << EOL
-20
+21
 EOL
 
 #STEP 3: eliminates jumps from one side to the other side of the box
 gmx trjconv -s md.tpr -f  md_noPBC_whole.xtc -pbc nojump -o md_noPBC_whole_nojump.xtc -quiet -n index.ndx << EOL
-20
+21
 EOL
 
 #STEP 4: center protein in box
 gmx trjconv -s md.tpr -f md_noPBC_whole_nojump.xtc -o md_noPBC_whole_nojump_center.xtc -center -quiet -n index.ndx << EOL
 Protein
-20
+21
 EOL
 
 #STEP 5: center all molecules in box and put all atoms at the closest distance from center of the box
 gmx trjconv -s md.tpr -f md_noPBC_whole_nojump_center.xtc -o md_noPBC_whole_nojump_center_mol_com.xtc -pbc mol -ur compact -quiet -n index.ndx << EOL
-20
+21
 EOL
 
 #STEP 6: fit the system to reference in structure file
 gmx trjconv -s md.tpr -f md_noPBC_whole_nojump_center_mol_com.xtc -o md_noPBC_whole_nojump_center_mol_com_fit.xtc -fit rot+trans -quiet -n index.ndx << EOL
 Backbone
-20
+21
 EOL
 rm md_noPBC_whole.xtc md_noPBC_whole_nojump.xtc md_noPBC_whole_nojump_center.xtc md_noPBC_whole_nojump_center_mol_com.xtc
 
 #STEP 6: output a .pdb file that contains the exact particles as the trajectory at t=0, so other programs know how to interpret the numbers in the trajectory
 gmx trjconv -s md.tpr -f md.xtc -o md_noPBC_firstframe.pdb -pbc mol -ur compact -dump 0 -quiet -n index.ndx << EOL
-20
+21
 EOL
 
 #STEP 8: make indeces of chains
-gmx make_ndx -f md_noPBC_firstframe.pdb -o index.ndx -quiet << EOL
+gmx make_ndx -f md.gro -o index2.ndx -quiet << EOL
 splitch 1
+17|18
 q
 EOL
 
@@ -101,9 +102,8 @@ unset cartoon_smooth_loops
 unset cartoon_flat_sheets
 set ray_shadows,0
 set ray_trace_mode,1
-C > spectrum > b-factors(*/CA)
-spectrum b, rainbow, minimum=7, maximum=308
-ramp_new color_bar, B_factor, [308, 7], rainbow
+spectrum b, rainbow, minimum=20, maximum=100
+ramp_new color_bar, B_factor, [20, 100], rainbow
 
 #STEP 14: delete frames when structure is unstable using RMSD
 
