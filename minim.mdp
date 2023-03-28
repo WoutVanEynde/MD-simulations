@@ -15,5 +15,5 @@ rvdw            = 1.0       ; Short-range Van der Waals cut-off
 pbc             = xyz       ; Periodic Boundary Conditions in all 3 dimensions
 
 ; Restraints
-; disre                 = Simple    ; no, Simple or Ensemble (for distance restraint)
-; nstdisreout           = 0         ; MPI
+disre                 = Simple    ; no, Simple or Ensemble (for distance restraint)
+nstdisreout           = 0         ; MPI

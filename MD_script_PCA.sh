@@ -173,4 +173,3 @@ plot(cij, main="AR DBD monomer residue-residue cross correlation")
 
 #3D PyMol visualisation of residue-residue cross correlation:
 pymol(cij, pdb, type="launch",exefile="/opt/pymol/bin/pymol")
-
