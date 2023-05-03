@@ -93,8 +93,9 @@ EOL
 
 #STEP 13: B-factor visualisation
 gmx rmsf -oq B_factor.pdb -ox B_factor_average_trajectory.pdb -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -s md.tpr -n index.ndx << EOL
-20
+18
 EOL
+
 #Adjust in MOE if file messed up
 show cartoon
 cartoon putty
@@ -102,13 +103,144 @@ unset cartoon_smooth_loops
 unset cartoon_flat_sheets
 set ray_shadows,0
 set ray_trace_mode,1
+set ray_trace_color, white
 spectrum b, rainbow, minimum=0, maximum=100
 ramp_new color_bar, B_factor, [0, 100], rainbow
-# for i in range(1, 80): cmd.bond(f"/B_factor//C/{i}/O3'", f"/B_factor//C/{i+1}/P")
-# set label_color, black, B_factor
 
-#STEP 14: delete frames when structure is unstable using RMSD
+# extra
+for i in range(1, 80): cmd.bond(f"/B_factor//C/{i}/O3'", f"/B_factor//C/{i+1}/P")
+set label_color, black, B_factor
 
-#STEP 15: save as .dcd file and .pdb file in VMD
+# B_factor_averaging:
+awk '/^ATOM/ && ($3=="CA" || $3=="C4\x27") {chain=substr($0,22,1); resnum=substr($0,23,4); print chain resnum}' B_factor.pdb > extracted_chain_and_residue.txt
+awk '/^ATOM/ && ($3=="CA" || $3=="C4\x27") {print substr($0,61,7)}' B_factor.pdb > extracted_B_factor.txt
+paste extracted_B_factor*.txt > merged_B_factor.txt
+rm extracted_B_factor*.txt
+sed -i 's/\./,/g' merged_B_factor.txt
+awk '{printf "%s %.2f\n", $0, ($1+$2+$3)/3}' merged_B_factor.txt > averaged_B_factor.txt
+sed -i 's/\,/./g' averaged_B_factor.txt
+paste extracted_chain_and_residue.txt averaged_B_factor.txt > input_insertion_py.txt
+rm averaged_B_factor.txt merged_B_factor.txt
+python insert-bfactor.py -p B_factor.pdb -b input_insertion_py.txt -o B_factor_averaged.pdb -d 0.0
+rm B_factor.pdb
 
-#STEP 16: continue analysis using MD_script_PCA.sh
+#STEP 14: angle visulisation
+gmx make_ndx -f md.pdb -o index_angle.ndx -quiet << EOL
+ri 26 & 3
+ri 43 & 3
+ri 97 & 3
+ri 114 & 3
+15 | 16 | 17
+17 | 18 | 15
+name 19 A564_A581_B564
+name 20 B564_B581_A564
+ri 66 & 3
+ri 137 & 3
+ri 148 & a P
+ri 161 & a P
+16 | 15 | 18
+15 | 16 | 17
+name 19 B604_A604_C19
+name 20 A564_B604_C6
+quit
+EOL
+
+gmx angle -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -n index_angle.ndx -od bend1av.xvg -ov bend1.xvg -quiet << EOL
+19
+EOL
+gmx angle -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -n index_angle.ndx -od bend2av.xvg -ov bend2.xvg -quiet << EOL
+20
+EOL
+
+gnuplot << EOL 
+set terminal png size 1000, 800 enhanced font "Helvetica,14"
+set datafile separator ','
+set output 'averaged_bending_over_time.png'
+set title 'Bending'
+set ylabel 'Angle (degree)'
+set xlabel 'Frames'  
+set grid
+plot 'angle1_averaged.csv' u 2 with lines lw 2 lc rgb 'red' title 'A564 A581 B564', \
+     'angle2_averaged.csv' u 2 with lines lw 2 lc rgb 'green' title 'B564 B581 A564'
+set key
+quit
+EOL
+
+#STEP 15: distance calculations (Use MOE for residue indeces)
+gmx make_ndx -f md.pdb -o index_distance.ndx -quiet << EOL 
+ri 29 & a NZ
+ri 33 & a CD 
+ri 36 & a NE2
+ri 38 & a OH  
+ri 148 & a OP2
+ri 149 & a OP2
+ri 178 & a OP1
+ri 179 & a OP1
+15 | 19
+15 | 20
+15 | 16
+17 | 21
+18 | 22 
+name 23 A567K_C4G
+name 24 A567K_C5T
+name 25 A567K_A571E
+name 26 A574Q_D11A
+name 27 A576Y_D12C
+ri 41 & a O
+ri 42 & a OG
+ri 47 & a OG1
+ri 112 & a O
+ri 113 & a OG
+ri 118 & a OG1
+28 | 33
+29 | 32
+30 | 31
+name 34 A579A_B585T
+name 35 A580S_B580S
+name 36 A585T_B579A
+ri 96 & a NZ
+ri 101 & a CZ
+ri 157 & a O6
+ri 171 & a O6
+ri 25 & a NZ
+ri 30 & a CZ
+ri 148 & a O6
+ri 180 & a O6
+37 | 40
+38 | 39
+41 | 43
+42 | 44
+name 45 CAN_B563K_D6G
+name 46 CAN_B568K_C15G
+name 47 NON_CAN_A563K_C6G
+name 48 NON_CAN_A568R_D15G    
+q
+EOL
+
+gmx distance -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -s md.pdb -n index_distance.ndx -select 23 24 25 26 27 34 35 36 45 46 47 48 -oallstat -oall -quiet
+
+gnuplot << EOL 
+set terminal png size 1000, 800 enhanced font "Helvetica,14"
+set datafile separator ","
+set output 'A585T B579A.png'
+set title 'A585T B579A'
+set ylabel 'Distance (nm)'
+set xlabel 'Time (ps)'
+set grid
+set key top right
+plot './C3/distance_averaged.csv' using 1:9 smooth sbezier w lines lw 2 lc rgb 'red' title 'C3', \
+     './MMTV/distance_averaged.csv' using 1:9 smooth sbezier w lines lw 2 lc rgb 'orange' title 'MMTV', \
+     './DR3/distance_averaged.csv' using 1:9 smooth sbezier w lines lw 2 lc rgb 'yellow' title 'DR3'
+quit
+EOL
+
+#violinplot
+seaborn script in jupyter notebook
+
+#MASS RENAMING: for f in *.png; do mv "$f" "C3_first_$f"; done
+
+#STEP 16: delete frames when structure is unstable using RMSD
+
+#STEP 17: save as .dcd file and .pdb file in VMD
+
+#STEP 18: continue analysis using MD_script_PCA.sh

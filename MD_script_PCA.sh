@@ -1,8 +1,10 @@
-# Installation of R via RStudio;
-# Installation of bio3D in R: install.packages("bio3d", dependencies=TRUE)
+# sudo apt list -a r-base-core
+# sudo apt-get install r-base-core=4.2.0-1.2204.0
+# Install RStudio via their deb package
+# Installation of bio3D in RStudio: install.packages("bio3d", dependencies=TRUE)
 # Installation of packages in terminal: sudo apt-get install gfortran libblas-dev liblapack-dev libnetcdf-dev;
-# Installation of shape in R: install.packages("shape");
-# Installation of adegenet in R: install.packages("adegenet");
+# Installation of shape in RStudio: install.packages("shape");
+# Installation of adegenet in RStudio: install.packages("adegenet");
 # The majority of this code originates from http://thegrantlab.org/bio3d/articles/online/traj_vignette/Bio3D_md.html; 
 
 #################
