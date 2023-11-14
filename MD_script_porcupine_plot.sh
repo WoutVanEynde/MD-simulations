@@ -5,25 +5,29 @@ C-alpha
 EOL
 
 #STEP 2: project an MD trajectory along a 1st eigenvector
-gmx anaeig -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -v eigenvec.trr -eig eigenval.xvg -s md.tpr -proj proj_1_2.xvg -b 0 -e 200000 -first 1 -last 1 << EOL
+gmx anaeig -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -v eigenvec.trr -eig eigenval.xvg -s md.tpr -proj proj_1_2.xvg -b 0 -e 500001 -first 1 -last 1 << EOL
 C-alpha
 C-alpha
 EOL
 
 #STEP 3: extract time scale from proj_1_2.xvg
 awk '{print $1}' proj_1_2.xvg > timescale.csv
-vim timescale.csv
+vim timescale.csv << EOL
 :set number
 :1,24d
+:wq
+EOL
 
 #STEP 4: project an MD trajectory in two dimensions of selected eigenvectors (essential subspace)
-gmx anaeig -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -v eigenvec.trr -eig eigenval.xvg -s md.tpr -2d 2dproj_1_2.xvg  -b 0 -e 200000 -first 1 -last 2 <<EOL
+gmx anaeig -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -v eigenvec.trr -eig eigenval.xvg -s md.tpr -2d 2dproj_1_2.xvg  -b 0 -e 500001 -first 1 -last 2 <<EOL
 C-alpha
 C-alpha
 EOL
-vim 2dproj_1_2.xvg
+vim 2dproj_1_2.xvg << EOL
 set number
 :1,17d
+:wq
+EOL
 
 #STEP 5: merge timescale into 2dproj_1_2.xvg
 paste 2dproj_1_2.xvg timescale.csv  > 2dproj_timescale.csv
@@ -52,27 +56,25 @@ set palette defined ( 0 "#000090",\
 plot '2dproj_timescale.csv' u 1:2:3 with points palette
 quit
 EOL
-okular 2D_projection_1_2.png 
 
 #STEP 7: porcupine
-gmx anaeig -v eigenvec.trr -s md.tpr -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -b 0 -e 200000 -first 1 -last 1 -extr extreme1.gro -nframes 2000 <<EOL
+gmx anaeig -v eigenvec.trr -s md.tpr -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -b 0 -e 200001 -first 1 -last 1 -extr extreme1.gro -nframes 2001 <<EOL
 C-alpha
 C-alpha
 EOL
 
 #STEP 8: visualise using modevectors.py
-sele resn CLEU
-remove sele
-sele resn NGLN
-remove sele
+cd AR/0_scripts/1_molecular_dynamics/
+hide ribbon
+show cartoon
 split_states extreme1, 1, 2
-split_states extreme1, 1999, 2000
+split_states extreme1, 2000, 2001
 set_name extreme1_0001, 0001
-set_name extreme1_2000, 2000
+set_name extreme1_2001, 2001
 delete extreme1_0002
-delete extreme1_1999
+delete extreme1_2000
 run modevectors.py
-modevectors 0001, 2000, cutoff=0, head_length=1, head=0.4, headrgb=(1,.2,.1), tailrgb=(1,.2,.1), notail=0
+modevectors 0001, 2001, cutoff=0, head_length=1, head=0.4, headrgb=(1,.2,.1), tailrgb=(1,.2,.1), notail=0
 bg_color black
 # Dont do preset.publication(selection='all'), will alter modevectors
 set cartoon_ring_mode, 3

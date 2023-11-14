@@ -50,7 +50,7 @@ EOL
 pymol md.gro md_noPBC_whole_nojump_center_mol_com_fit.xtc
 
 #STEP 10: calculate RMSD
-gmx rms -s md.tpr -f md_noPBC_whole_nojump_center_mol_com.xtc -o rmsd.xvg -tu ns -quiet << EOL
+gmx rms -s md.tpr -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -o rmsd.xvg -tu ns -quiet << EOL
 Backbone
 Backbone
 EOL
@@ -59,16 +59,30 @@ EOL
 gnuplot << EOL 
 set terminal png size 1000, 800 enhanced font "Helvetica,14"
 set output 'rmsd.png'
-set title 'RMSD, backbone'
+set title 'RMSD'
 set ylabel 'RMSD (nm)'
 set xlabel 'Time (ns)'
-#set xrang [0:2000]
 unset key  
 set grid
 plot 'rmsd.xvg' u 1:2 w lines lw 2 lc rgb '#27ad81'
 quit
 EOL
 okular rmsd.png
+
+gnuplot << EOL 
+set terminal png size 1000, 800 enhanced font "Helvetica,14"
+set output 'RMSD DR3.png'
+set title 'RMSD DR3'
+set ylabel 'RMSD (nm)'
+set xlabel 'Time (ns)'
+set xrang [0:200]
+set grid
+set key top right
+plot './2_first_run/rmsd.xvg' using 1:2 smooth sbezier w lines lw 2 lc rgb 'red' title 'First simulation', \
+     './2_second_run/rmsd.xvg' using 1:2 smooth sbezier w lines lw 2 lc rgb 'orange' title 'Second simulation', \
+     './2_third_run/rmsd.xvg' using 1:2 smooth sbezier w lines lw 2 lc rgb 'yellow' title 'Third simulation'
+quit
+EOL
 
 #STEP 12: visualise hydrogen bonds
 gmx hbond -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -s md.tpr -n index.ndx << EOL
@@ -92,8 +106,24 @@ plot datafile using 1:2 with lines ls 1 title "Number of Hydrogen Bonds", \
 EOL
 
 #STEP 13: B-factor visualisation
-gmx rmsf -oq B_factor.pdb -ox B_factor_average_trajectory.pdb -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -s md.tpr -n index.ndx << EOL
+gmx rmsf -oq B_factor.pdb -ox B_factor_average_trajectory.pdb -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -s md.tpr -n index.ndx<< EOL
 18
+EOL
+
+gmx rmsf -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -s md.tpr -n index.ndx -o rmsf_backbone.xvg<< EOL
+4
+EOL
+
+gnuplot << EOL 
+set terminal png size 1000, 800 enhanced font "Helvetica,14"
+set output 'rmsf.png'
+set title 'RMSF, backbone'
+set ylabel 'RMSD (nm)'
+set xlabel 'Residue number'
+unset key  
+set grid
+plot 'rmsf_backbone.xvg' u 1:2 w lines lw 2 lc rgb '#27ad81'
+quit
 EOL
 
 #Adjust in MOE if file messed up
@@ -121,11 +151,11 @@ awk '{printf "%s %.2f\n", $0, ($1+$2+$3)/3}' merged_B_factor.txt > averaged_B_fa
 sed -i 's/\,/./g' averaged_B_factor.txt
 paste extracted_chain_and_residue.txt averaged_B_factor.txt > input_insertion_py.txt
 rm averaged_B_factor.txt merged_B_factor.txt
-python insert-bfactor.py -p B_factor.pdb -b input_insertion_py.txt -o B_factor_averaged.pdb -d 0.0
+python /home/wout/0_AR/0_scripts/1_molecular_dynamics/insert-bfactor.py -p B_factor.pdb -b input_insertion_py.txt -o B_factor_averaged.pdb -d 0.0
 rm B_factor.pdb
 
 #STEP 14: angle visulisation
-gmx make_ndx -f md.pdb -o index_angle.ndx -quiet << EOL
+gmx make_ndx -f md.pdb -o index_angle3.ndx -quiet << EOL
 ri 26 & 3
 ri 43 & 3
 ri 97 & 3
@@ -142,13 +172,21 @@ ri 161 & a P
 15 | 16 | 17
 name 19 B604_A604_C19
 name 20 A564_B604_C6
+ri 47 & 3
+ri 177 & a P
+ri 118 & 3
+ri 154 & a P
+15 | 18 | 17
+15 | 16 | 17
+name 19 A585T_C12_B585T
+name 20 A585T_D12_B585T
 quit
 EOL
 
-gmx angle -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -n index_angle.ndx -od bend1av.xvg -ov bend1.xvg -quiet << EOL
+gmx angle -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -n index_angle3.ndx -od bend5av.xvg -ov bend5.xvg -quiet << EOL
 19
 EOL
-gmx angle -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -n index_angle.ndx -od bend2av.xvg -ov bend2.xvg -quiet << EOL
+gmx angle -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -n index_angle3.ndx -od bend6av.xvg -ov bend6.xvg -quiet << EOL
 20
 EOL
 
@@ -168,7 +206,22 @@ EOL
 
 #STEP 15: distance calculations (Use MOE for residue indeces)
 gmx make_ndx -f md.pdb -o index_distance.ndx -quiet << EOL 
-ri 29 & a NZ
+ri 29 & a NZgmx make_ndx -f md.tpr -o index_mmpbsa << EOL
+1 | 12 | 13
+14 | 15| 16
+1 | 13
+ri 144-164
+ri 167-187
+21 | 22
+name 23 stable_DNA
+20 | 23
+name 24 Protein_stable_DNA_ZN
+ri 147-161
+ri 170-184
+25 | 26
+name 27 Protein_truncated_DNA_ZN
+q
+EOL
 ri 33 & a CD 
 ri 36 & a NE2
 ri 38 & a OH  
@@ -234,13 +287,115 @@ plot './C3/distance_averaged.csv' using 1:9 smooth sbezier w lines lw 2 lc rgb '
 quit
 EOL
 
+gnuplot << EOL 
+set terminal png size 1000, 800 enhanced font "Helvetica,14"
+set output 'MMTV NON_CAN_A568R_D15G.png'
+set title 'MMTV NON_CAN_A568R_D15G'
+set ylabel 'Distance (nm)'
+set xlabel 'Time (ps)'
+set grid
+set key top right
+plot './2_first_run/dist.xvg' using 1:13 smooth sbezier w lines lw 2 lc rgb 'red' title 'First run', \
+     './2_second_run/dist.xvg' using 1:13 smooth sbezier w lines lw 2 lc rgb 'orange' title 'Second run', \
+     './2_third_run/dist.xvg' using 1:13 smooth sbezier w lines lw 2 lc rgb 'yellow' title 'Third run'
+quit
+EOL
+
 #violinplot
 seaborn script in jupyter notebook
 
+#STEP 16: SASA
+gmx make_ndx -f md.gro -o index_sasa.ndx -quiet << EOL
+1|13
+1|12|13
+q
+EOL
+gmx sasa -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -s md.pdb -n index_sasa.ndx -quiet -o sasa_complex.xvg << EOL
+19
+EOL
+gmx sasa -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -s md.pdb -n index_sasa.ndx -quiet -o sasa_protein.xvg << EOL
+18
+EOL
+gmx sasa -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -s md.pdb -n index_sasa.ndx -quiet -o sasa_dna.xvg << EOL
+12
+EOL
+
 #MASS RENAMING: for f in *.png; do mv "$f" "C3_first_$f"; done
 
-#STEP 16: delete frames when structure is unstable using RMSD
+#STEP 17: delete frames when structure is unstable using RMSD
 
-#STEP 17: save as .dcd file and .pdb file in VMD
+#STEP 18: save as .dcd file and .pdb file in VMD
 
-#STEP 18: continue analysis using MD_script_PCA.sh
+#STEP 19: continue analysis using MD_script_PCA.sh
+
+#EXTRA LEVER ARM CALCULATIONS:
+
+gmx make_ndx -f md.gro -o index_la.ndx -quiet << EOL
+ri 25-42 & 4
+ri 96-113 & 4
+name 18 non_canonical_la
+name 19 canonical_la
+quit
+EOL
+
+gmx rms -s md.tpr -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -n index_la.ndx -o nc_la.xvg << EOL
+18
+18
+EOL
+gmx rms -s md.tpr -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -n index_la.ndx -o can_la.xvg << EOL
+19
+19
+EOL
+
+gmx trjconv -s md.tpr -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -o md_nc_la.xtc -fit rot+trans -quiet -n index_la.ndx << EOL
+Backbone
+18
+EOL
+gmx trjconv -s md.tpr -f md.xtc -o md_nc_la.pdb -pbc mol -ur compact -dump 0 -quiet -n index_la.ndx << EOL
+18
+EOL
+gmx trjconv -s md.tpr -f md_noPBC_whole_nojump_center_mol_com_fit.xtc -o md_can_la.xtc -fit rot+trans -quiet -n index_la.ndx << EOL
+Backbone
+19
+EOL
+gmx trjconv -s md.tpr -f md.xtc -o md_can_la.pdb -pbc mol -ur compact -dump 0 -quiet -n index_la.ndx << EOL
+19
+EOL
+
+gnuplot << EOL 
+set terminal png size 1000, 800 enhanced font "Helvetica,14"
+set output 'C3_nc_la_rmsd.png'
+set title 'C3 non canonical lever arm RMSD'
+set ylabel 'RMSD (nm)'
+set xlabel 'Time (ps)'
+set grid
+set key top right
+plot './2_first_run/nc_la.xvg' using 1:2 smooth sbezier w lines lw 2 lc rgb 'red' title 'First run', \
+     './2_second_run/nc_la.xvg' using 1:2 smooth sbezier w lines lw 2 lc rgb 'orange' title 'Second run', \
+     './2_third_run/nc_la.xvg' using 1:2 smooth sbezier w lines lw 2 lc rgb 'yellow' title 'Third run'
+quit
+EOL
+
+gmx rms -s '/home/wout/0_AR/7_ARE/5_isolated_leverarm/C3_can_LA.pdb'  -f '/home/wout/0_AR/7_ARE/1_molecular_dynamics/C3/2_first_run/md_la.xtc' -fit rot+trans
+
+#GBSA STABLE DNA SELECTION:
+
+gmx make_ndx -f md.tpr -o index_mmpbsa << EOL
+1 | 12 | 13
+14 | 15| 16
+1 | 13
+ri 144-164
+ri 167-187
+21 | 22
+name 23 stable_DNA
+20 | 23
+name 24 Protein_stable_DNA_ZN
+ri 147-161
+ri 170-184
+25 | 26
+name 27 Truncated_DNA
+20 | 27
+name 28 Protein_truncated_DNA_ZN
+q
+EOL
+

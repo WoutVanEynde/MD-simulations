@@ -1,7 +1,7 @@
-# sudo apt list -a r-base-core
-# sudo apt-get install r-base-core=4.2.0-1.2204.0
-# Install RStudio via their deb package
-# Installation of bio3D in RStudio: install.packages("bio3d", dependencies=TRUE)
+# sudo apt list -a r-base-core;
+# sudo apt-get install r-base-core=4.2.0-1.2204.0;
+# Install RStudio via their deb package;
+# Installation of bio3D in RStudio: install.packages("bio3d", dependencies=TRUE);
 # Installation of packages in terminal: sudo apt-get install gfortran libblas-dev liblapack-dev libnetcdf-dev;
 # Installation of shape in RStudio: install.packages("shape");
 # Installation of adegenet in RStudio: install.packages("adegenet");
@@ -20,7 +20,7 @@ library(shape)
 sessionInfo()
 
 #Load .pdb file into environment:
-mypdbfile <- "~/AR/MD/monomer_200_ns/4_monomer_pca/md_noPBC_10nsframe.pdb"
+mypdbfile <- "/home/wout/AR/7_ARE/1_molecular_dynamics/MMTV/2_third_run/md_nc_la.pdb"
 
 #Read the .pdb file:
 pdb <- read.pdb(mypdbfile)
@@ -29,7 +29,7 @@ pdb <- read.pdb(mypdbfile)
 print(pdb)
 
 #Load .dcd file into environment:
-mydcdfile <- "~/AR/MD/monomer_200_ns/4_monomer_pca/10to140ns.dcd"
+mydcdfile <- "/home/wout/AR/7_ARE/1_molecular_dynamics/MMTV/2_third_run/md_nc_la.dcd"
 
 #Read the dcd file:
 dcd <- read.dcd(mydcdfile)
@@ -80,8 +80,8 @@ colorlegend(col= bwr.colors(nrow(xyz)), zlim = range(0:130), main="Time Step(ns)
 
 #Cluster identification of CA using Bayesian Information Criterion (BIC = method to optimize choosing between 2 or more alternative models):
 clust <- find.clusters(pc$z, n.pca = 100)
-print(clust$Kstat[1:20])
-plot(clust$Kstat[1:30], type="b", col="blue", xlab = "", ylab = "")
+print(clust$Kstat[1:50])
+plot(clust$Kstat[1:50], type="b", col="blue", xlab = "", ylab = "")
 title(xlab="Number of Clusters", ylab= "BIC", main = "AR DBD monomer")
 
 #Cluster identification of protein using Bayesian Information Criterion (BIC = method to optimize choosing between 2 or more alternative models):
@@ -91,19 +91,19 @@ title(xlab="Number of Clusters", ylab= "BIC", main = "AR DBD monomer")
 #plot(clust2$Kstat[1:30], type="b", col="blue", xlab = "", ylab = "")
 #title(xlab="Number of Clusters", ylab= "BIC", main = "AR DBD monomer")
 
-Kmeans clustering of CA:
-kcl <- kmeans(pc$z, 5)
-plot(pc, col = kcl$cluster)
+#Kmeans clustering of CA:
+#kcl <- kmeans(pc$z, 5)
+#plot(pc, col = kcl$cluster)
 
 #Kmeans clustering of protein:
 #kcl2 <- kmeans(pc2$z, 5)
 #plot(pc2, col = kcl$cluster)
 
 #Complete clustering of CA:
-hc <- hclust(dist(pc$z[,1:9]))
-grps <- cutree(hc, k=4)
-table(grps)
-plot(pc, col=grps)
+#hc <- hclust(dist(pc$z[,1:9]))
+#grps <- cutree(hc, k=4)
+#table(grps)
+#plot(pc, col=grps)
 
 #Complete clustering of protein:
 #hc2 <- hclust(dist(pc2$z[,1:7]))
@@ -112,8 +112,8 @@ plot(pc, col=grps)
 #plot(pc2, col=grps2) 
 
 #UPGMA clustering of CA:
-hc3 <- hclust(dist(pc$z[,1:9]), method = "average")
-grps3 <- cutree(hc3, k=4)
+hc3 <- hclust(dist(pc$z[,1:8]), method = "average")
+grps3 <- cutree(hc3, k=25)
 table(grps3)
 plot(pc, col = grps3)
 
@@ -151,10 +151,9 @@ cluster3 <- data.frame(pc.z[grps3==3,])
 cluster4 <- data.frame(pc.z[grps3==4,])
 
 #Change the amount of clusters:
-index_closest_to_center(1)
-index_closest_to_center(2)
 index_closest_to_center(3)
-index_closest_to_center(4)
+index_closest_to_center(21)
+index_closest_to_center(7)
 
 #Chose the first frame if the cosine is is smaller than 0.9:
 "
