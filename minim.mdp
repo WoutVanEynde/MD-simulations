@@ -6,7 +6,7 @@ emstep      = 0.01          ; Minimization step size
 nsteps      = 50000         ; Maximum number of (minimization) steps to perform
 
 ; Parameters describing how to find the neighbors of each atom and how to calculate the interactions
-nstlist         = 10        ; Frequency to update the neighbor list and long range forces
+nstlist         = 1         ; Frequency to update the neighbor list and long range forces
 cutoff-scheme   = Verlet    ; Buffered neighbor searching
 ns_type         = grid      ; Method to determine neighbor list (simple, grid)
 coulombtype     = PME       ; Treatment of long range electrostatic interactions

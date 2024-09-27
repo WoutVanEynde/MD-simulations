@@ -9,7 +9,11 @@ Be careful with the variables you modify, some can have severe consequences on t
 
 # gmx_MMPBSA_ana -f . -r
 
-# gmx_MMPBSA_ana -f *_mmxsa
+### IN ORDER TO DECIDE DIELECTRIC CONSTANT ###
+# Check the dimer interface at a value of 5 with residue decomposition
+# Sum the kcal/mol for hydrophobic (1), polar (3) and charged (5) residues
+# Change the dielectric constant to which kind of residue is dominant, if close in value tkae the highest value
+# This should be optimized dielectric constant value for complex
 
 # General namelist variables
 &general
